@@ -1,0 +1,12 @@
+__pycache__/
+.snakemake/
+.DS_Store
+.env/
+envs/*.lock
+/data/processed/
+/models/
+/reports/*.json
+/reports/*.png
+*.h5ad
+*.parquet
+*.csv
