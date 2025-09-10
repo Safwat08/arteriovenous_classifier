@@ -1,0 +1,9 @@
+.snakemake/
+__pycache__/
+.DS_Store
+.env/
+data/
+models/
+reports/
+*.h5ad
+*.parquet

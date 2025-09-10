@@ -1,0 +1,14 @@
+# envs/avml.yml
+name: avml
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - snakemake=8.*
+  - polars
+  - pandas
+  - anndata
+  - scipy
+  - h5py
+  - scanpy
