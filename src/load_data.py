@@ -8,8 +8,31 @@ import scipy.sparse as sp
 from pathlib import Path
 import argparse
 
-def main(rawdata_path, metadata_path, adata_path):
+def main(rawdata_path: str, 
+         metadata_path: str, 
+         adata_path: str):
+        
+    """
+    Load a csv file using polars and convert it into a an AnnData object
+    
+    Parameters:
+    -----------
+    rawdata_path : str
+        The file path to the data .csv file to be loaded.
+    
+    metadata_path : str
+        The file path to the metadata .csv file to be loaded.
 
+    adata_path : str
+        The file path to where the AnnData will be saved
+    
+    Returns:
+    --------
+    adata_raw : AnnData
+        The AnnData object:
+    """
+
+    # Ensure path of AnnData exists
     Path(adata_path).parent.mkdir(parents=True, exist_ok=True)
 
     # Read raw data using polars (faster for larger files) using lazy/streaming method
