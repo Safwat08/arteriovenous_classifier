@@ -63,7 +63,6 @@ def qc_adata(adata,
     adata.layers['rawcounts'] = adata.X.copy()
 
     # Species-specific gene prefixes
-    # Species-specific gene prefixes
     if species.lower() == "human":
         mito_prefix = "MT-"
         ribo_prefix = ("RPS", "RPL")
@@ -76,13 +75,11 @@ def qc_adata(adata,
         raise ValueError("Species not recognized. Use 'human' or 'mouse'.")
     
     # Insert a column 'gene_names' with the values from the index of adata.var
-    adata.var['gene_names'] = adata.var.index.astype(str)       
-    adata.var['gene_names'] = adata.var.index.astype(str)       
+    adata.var['gene_names'] = adata.var.index.astype(str)    
     
     # Identify mitochondrial, ribosomal and hemoglobin genes based on species-specific prefix
     adata.var["mt"] = adata.var["gene_names"].str.startswith(mito_prefix)
     adata.var["ribo"] = adata.var["gene_names"].str.startswith(ribo_prefix)
-    adata.var["hb"] = adata.var["gene_names"].str.contains(hemo_prefix, regex=True, na=False)
     adata.var["hb"] = adata.var["gene_names"].str.contains(hemo_prefix, regex=True, na=False)
     
     # Calculate qc_metrics
@@ -114,14 +111,11 @@ def main(adata_raw_path: str,
          species: str = "mouse"):
     
     # Ensure output dirs exist
-    # Ensure output dirs exist
     Path(adata_qc_path).parent.mkdir(parents=True, exist_ok=True)
     Path(figures_path).mkdir(parents=True, exist_ok=True)
 
     # Read and QC
-    # Read and QC
     adata = sc.read_h5ad(adata_raw_path)
-    adata = qc_adata(adata, species=species)
     adata = qc_adata(adata, species=species)
 
     # QC Plot 1: Overlap of all outliers
@@ -232,9 +226,6 @@ def main(adata_raw_path: str,
     # Change back to bool (optional, if you need booleans later)
     for col in ["outlier", "mt_outlier", "ribo_outlier", "hb_outlier"]:
         adata.obs[col] = adata.obs[col].astype(bool)
-    # Change back to bool (optional, if you need booleans later)
-    for col in ["outlier", "mt_outlier", "ribo_outlier", "hb_outlier"]:
-        adata.obs[col] = adata.obs[col].astype(bool)
 
     # Filter based on outlier
     adata_filtered = adata[
@@ -258,7 +249,5 @@ if __name__ == "__main__":
     ap.add_argument("--adata_qc_path", required=True)
     ap.add_argument("--figures_path", required=True)
     ap.add_argument("--species", choices=["mouse", "human"], default="mouse")
-    ap.add_argument("--species", choices=["mouse", "human"], default="mouse")
     args = ap.parse_args()
-    main(args.adata_raw_path, args.adata_qc_path, args.figures_path, species=args.species)
     main(args.adata_raw_path, args.adata_qc_path, args.figures_path, species=args.species)
