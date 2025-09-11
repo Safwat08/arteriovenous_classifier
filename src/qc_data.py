@@ -1,6 +1,7 @@
 # qc_data
 # This script loads the adata_raw.h5ad file, conducts QC, generates QC figures and saves the QC'd AnnData
 
+import argparse
 import scanpy as sc 
 import numpy as np 
 from pathlib import Path
@@ -64,7 +65,7 @@ def qc_adata(adata,
     # Make a new layer 'rawcounts' to keep the raw data
     adata.layers['rawcounts'] = adata.X.copy()
 
-    # Handle species-specific mitochondrial gene detection
+    # Species-specific gene prefixes
     if species.lower() == "human":
         mito_prefix = "MT-"
         ribo_prefix = ("RPS", "RPL")
@@ -77,12 +78,12 @@ def qc_adata(adata,
         raise ValueError("Species not recognized. Use 'human' or 'mouse'.")
     
     # Insert a column 'gene_names' with the values from the index of adata.var
-    adata.var['gene_names'] = adata.var.index       
+    adata.var['gene_names'] = adata.var.index.astype(str)       
     
     # Identify mitochondrial, ribosomal and hemoglobin genes based on species-specific prefix
     adata.var["mt"] = adata.var["gene_names"].str.startswith(mito_prefix)
     adata.var["ribo"] = adata.var["gene_names"].str.startswith(ribo_prefix)
-    adata.var["hb"] = adata.var["gene_names"].str.contains(hemo_prefix)
+    adata.var["hb"] = adata.var["gene_names"].str.contains(hemo_prefix, regex=True, na=False)
     
     # Calculate qc_metrics
     sc.pp.calculate_qc_metrics(
@@ -109,28 +110,33 @@ def qc_adata(adata,
 
 def main(adata_raw_path: str,
          adata_qc_path: str,
-         figures_path: str):
+         figures_path: str,
+         species: str = "mouse"):
     
-    # Ensure path of QC'd AnnData exists
+    # Ensure output dirs exist
     Path(adata_qc_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(figures_path).mkdir(parents=True, exist_ok=True)
 
-    # Ensure path of QC figures exists
-    os.makedirs(figures_path, exist_ok=True)
-
+    # Read and QC
     adata = sc.read_h5ad(adata_raw_path)
-
-    adata = qc_adata(adata)
+    adata = qc_adata(adata, species=species)
 
     # QC Plot 1: Overlap of all outliers
     
-    # build memberships
+    # Build membership labels per cell
+    outliers_set   = set(adata.obs.index[adata.obs["outlier"] == True])
+    mt_set         = set(adata.obs.index[adata.obs["mt_outlier"] == True])
+    ribo_set       = set(adata.obs.index[adata.obs["ribo_outlier"] == True])
+    hb_set         = set(adata.obs.index[adata.obs["hb_outlier"] == True])
+
     memberships = []
     for cell in adata.obs.index:
         mem = []
-        if cell in outliers: mem.append("Counts")
-        if cell in mt_outliers: mem.append("MT")
-        if cell in ribo_outliers: mem.append("Ribo")
-        if cell in hb_outliers: mem.append("Hb")
+        if cell in outliers_set: mem.append("Counts")
+        if cell in mt_set:       mem.append("MT")
+        if cell in ribo_set:     mem.append("Ribo")
+        if cell in hb_set:       mem.append("Hb")
+        # UpSet expects at least an empty list (cells with no flags)
         memberships.append(mem)
 
     # convert to UpSet data
@@ -140,11 +146,13 @@ def main(adata_raw_path: str,
     plt.savefig(figures_path + "qc1_upset.png", dpi=300, bbox_inches="tight")
     plt.close()
 
-    # Change boolean to categorical for easier visualization
-    adata.obs["outlier"] = pd.Categorical(adata.obs["outlier"])
-    adata.obs["mt_outlier"] = pd.Categorical(adata.obs["mt_outlier"])
-    adata.obs["ribo_outlier"] = pd.Categorical(adata.obs["ribo_outlier"])
-    adata.obs["hb_outlier"] = pd.Categorical(adata.obs["hb_outlier"])
+    # Convert to categorical for grouping in violin plots
+    for col in ["outlier", "mt_outlier", "ribo_outlier", "hb_outlier"]:
+        adata.obs[col] = pd.Categorical(adata.obs[col])
+
+    # Direct plots to the figures folder for Scanpy's save=
+    sc.settings.figdir = str(Path(figures_path))
+    sc.settings.autosave = False
     
     # QC Plot 2: Scatter of ngenes by count & total counts, colored by outlier
     sc.pl.scatter(
@@ -218,14 +226,17 @@ def main(adata_raw_path: str,
         save = figures_path + "qc9_violin_hb.png"
     )
 
-    # Change back to bool
-    adata.obs["outlier"] = adata.obs["outlier"].astype(bool)
-    adata.obs["mt_outlier"] = adata.obs["mt_outlier"].astype(bool)
-    adata.obs["ribo_outlier"] = adata.obs["ribo_outlier"].astype(bool)
-    adata.obs["hb_outlier"] = adata.obs["hb_outlier"].astype(bool)
+    # Change back to bool (optional, if you need booleans later)
+    for col in ["outlier", "mt_outlier", "ribo_outlier", "hb_outlier"]:
+        adata.obs[col] = adata.obs[col].astype(bool)
 
     # Filter based on outlier
-    adata_filtered = adata[(~adata.obs.outlier) & (~adata.obs.mt_outlier) & (~adata.obs.ribo_outlier) & (~adata.obs.hb_outlier)].copy()
+    adata_filtered = adata[
+        (~adata.obs["outlier"])
+        & (~adata.obs["mt_outlier"])
+        & (~adata.obs["ribo_outlier"])
+        & (~adata.obs["hb_outlier"])
+    ].copy()
 
     adata_filtered.write(adata_qc_path)
 
@@ -234,5 +245,6 @@ if __name__ == "__main__":
     ap.add_argument("--adata_raw_path", required=True)
     ap.add_argument("--adata_qc_path", required=True)
     ap.add_argument("--figures_path", required=True)
+    ap.add_argument("--species", choices=["mouse", "human"], default="mouse")
     args = ap.parse_args()
-    main(args.adata_raw_path, args.adata_qc_path, args.figures_path)
+    main(args.adata_raw_path, args.adata_qc_path, args.figures_path, species=args.species)

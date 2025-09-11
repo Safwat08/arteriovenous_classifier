@@ -1,0 +1,8 @@
+paths:
+  raw: data/raw
+  processed: data/processed
+  figs: figures
+files:
+  rawdata: Data.csv
+  metadata: Metadata.csv
+species: mouse
