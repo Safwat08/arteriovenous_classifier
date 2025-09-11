@@ -25,11 +25,6 @@ def main(rawdata_path: str,
 
     adata_path : str
         The file path to where the AnnData will be saved
-    
-    Returns:
-    --------
-    adata_raw : AnnData
-        The AnnData object:
     """
 
     # Ensure path of AnnData exists

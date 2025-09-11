@@ -25,4 +25,5 @@ ENV PATH=/opt/conda/envs/avml/bin:$PATH
 COPY . /work
 
 # default command if you just run the image
-CMD ["snakemake", "-h"]
+ENTRYPOINT ["snakemake"]
+CMD ["--cores", "4"]

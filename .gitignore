@@ -7,6 +7,8 @@ envs/*.lock
 /models/
 /reports/*.json
 /reports/*.png
+/figures/
 *.h5ad
 *.parquet
 *.csv
+*.png
