@@ -66,11 +66,11 @@ def qc_adata(adata,
     if species.lower() == "human":
         mito_prefix = "MT-"
         ribo_prefix = ("RPS", "RPL")
-        hemo_prefix = "^HB[^(P)]"
+        hemo_prefix = ("HBB-", "HBA-")
     elif species.lower() == "mouse":
         mito_prefix = "mt-"
         ribo_prefix = ("Rps", "Rpl")
-        hemo_prefix = "^Hb[^(P)]"
+        hemo_prefix = ("Hbb-", "Hba-")
     else:
         raise ValueError("Species not recognized. Use 'human' or 'mouse'.")
     
@@ -80,7 +80,7 @@ def qc_adata(adata,
     # Identify mitochondrial, ribosomal and hemoglobin genes based on species-specific prefix
     adata.var["mt"] = adata.var["gene_names"].str.startswith(mito_prefix)
     adata.var["ribo"] = adata.var["gene_names"].str.startswith(ribo_prefix)
-    adata.var["hb"] = adata.var["gene_names"].str.contains(hemo_prefix, regex=True, na=False)
+    adata.var["hb"] = adata.var["gene_names"].str.startswith(hemo_prefix)
     
     # Calculate qc_metrics
     sc.pp.calculate_qc_metrics(
@@ -108,18 +108,40 @@ def qc_adata(adata,
 def main(adata_raw_path: str,
          adata_qc_path: str,
          figures_path: str,
+         results_path: str,
          species: str = "mouse"):
     
     # Ensure output dirs exist
     Path(adata_qc_path).parent.mkdir(parents=True, exist_ok=True)
     Path(figures_path).mkdir(parents=True, exist_ok=True)
+    Path(results_path).mkdir(parents=True, exist_ok=True)
+
 
     # Read and QC
     adata = sc.read_h5ad(adata_raw_path)
     adata = qc_adata(adata, species=species)
 
     # QC Plot 1: Overlap of all outliers
-    
+    # Get which genes are mitochondrial, ribosomal and hemoglobin
+    mt_genes = adata.var[adata.var["mt"] == True].index
+    ribo_genes = adata.var[adata.var["ribo"] == True].index
+    hb_genes = adata.var[adata.var["hb"] == True].index
+
+    # Print total number of cells that are outliers for each metric and put in a csv file called qc_metrics.csv saved under results folder
+    qc_metrics = pd.DataFrame({
+        "outlier": adata.obs["outlier"].sum(),
+        "mt_outlier": adata.obs["mt_outlier"].sum(),
+        "ribo_outlier": adata.obs["ribo_outlier"].sum(),
+        "hb_outlier": adata.obs["hb_outlier"].sum()
+    }, index=[0])
+    qc_metrics.to_csv(Path(results_path) / "qc_metrics.csv", index=False)
+
+    pd.DataFrame(mt_genes).to_csv(Path(results_path) / "mt_genes.csv", index=False)
+    pd.DataFrame(ribo_genes).to_csv(Path(results_path) / "ribo_genes.csv", index=False)
+    pd.DataFrame(hb_genes).to_csv(Path(results_path) / "hb_genes.csv", index=False)
+
+    print(mt_genes)
+    print(ribo_genes)
     # Build membership labels per cell
     # outliers_set   = set(adata.obs.index[adata.obs["outlier"] == True])
     # mt_set         = set(adata.obs.index[adata.obs["mt_outlier"] == True])
@@ -190,7 +212,7 @@ def main(adata_raw_path: str,
     # QC Plot 6: Violin plot of n genes by count, total counts and pct_counts_mt, colored by outlier
     sc.pl.violin(
         adata,
-        ["n_genes_by_counts", "total_counts", "pct_counts_mt"],
+        ["n_genes_by_counts", "total_counts"],
         jitter=0.4,
         multi_panel=True, groupby= 'outlier',
         save ="qc6_violin_counts.png"
@@ -208,7 +230,7 @@ def main(adata_raw_path: str,
     # QC Plot 8: Violin plot of n genes by count, total counts and pct_counts_mt, colored by mt_outlier
     sc.pl.violin(
         adata,
-        ["n_genes_by_counts", "total_counts", "pct_counts_mt"],
+        ["n_genes_by_counts", "total_counts", "pct_counts_ribo"],
         jitter=0.4,
         multi_panel=True, groupby= 'ribo_outlier',
         save ="qc8_violin_ribo.png"
@@ -217,7 +239,7 @@ def main(adata_raw_path: str,
     # QC Plot 9: Violin plot of n genes by count, total counts and pct_counts_mt, colored by mt_outlier
     sc.pl.violin(
         adata,
-        ["n_genes_by_counts", "total_counts", "pct_counts_mt"],
+        ["n_genes_by_counts", "total_counts", "pct_counts_hb"],
         jitter=0.4,
         multi_panel=True, groupby= 'hb_outlier',
         save ="qc9_violin_hb.png"
@@ -248,6 +270,7 @@ if __name__ == "__main__":
     ap.add_argument("--adata_raw_path", required=True)
     ap.add_argument("--adata_qc_path", required=True)
     ap.add_argument("--figures_path", required=True)
+    ap.add_argument("--results_path", required=True)
     ap.add_argument("--species", choices=["mouse", "human"], default="mouse")
     args = ap.parse_args()
-    main(args.adata_raw_path, args.adata_qc_path, args.figures_path, species=args.species)
+    main(args.adata_raw_path, args.adata_qc_path, args.figures_path, args.results_path, species=args.species)

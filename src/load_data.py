@@ -31,7 +31,7 @@ def main(rawdata_path: str,
     Path(adata_path).parent.mkdir(parents=True, exist_ok=True)
 
     # Read raw data using polars (faster for larger files) using lazy/streaming method
-    rawdata = pl.scan_csv(rawdata_path).collect(streaming=True)
+    rawdata = pl.scan_csv(rawdata_path).collect(engine="streaming")
 
     # Cell names from index column
     gene_names = rawdata[:, 0].to_list()
