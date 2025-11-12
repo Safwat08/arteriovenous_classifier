@@ -8,5 +8,7 @@ files:
   metadata: Metadata.csv
   adata_raw: adata_raw.h5ad
   adata_qc: adata_qc.h5ad
+  adata_norm: adata_norm.h5ad
+  
 params: 
   species: mouse
