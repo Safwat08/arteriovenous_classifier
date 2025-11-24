@@ -57,7 +57,7 @@ rule scanpy_pipeline:
         adata_norm = f"{out_dir}/{adata_norm_file}"
     shell:
         """
-        python src/normalization_log1p.py \
+        python src/scanpy_pipeline.py \
             --adata_qc_path {input.adata_qc} \
             --adata_norm_path {output.adata_norm}
         """
