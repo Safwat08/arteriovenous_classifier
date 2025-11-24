@@ -1,6 +1,7 @@
 paths:
   raw: data/raw
   processed: data/processed
+  splits: data/splits
   figs: figures
   results: results
 files:
@@ -9,6 +10,18 @@ files:
   adata_raw: adata_raw.h5ad
   adata_qc: adata_qc.h5ad
   adata_norm: adata_norm.h5ad
-  
+  adata_subset: adata_subset.h5ad
+  # Test splits
+  adata_test_fold1: adata_test_fold1.h5ad
+  adata_test_fold2: adata_test_fold2.h5ad
+  adata_test_fold3: adata_test_fold3.h5ad
+  adata_test_fold4: adata_test_fold4.h5ad
+  adata_test_fold5: adata_test_fold5.h5ad
+  # Train splits
+  adata_train_fold1: adata_train_fold1.h5ad
+  adata_train_fold2: adata_train_fold2.h5ad
+  adata_train_fold3: adata_train_fold3.h5ad
+  adata_train_fold4: adata_train_fold4.h5ad
+  adata_train_fold5: adata_train_fold5.h5ad
 params: 
   species: mouse
