@@ -25,6 +25,12 @@ QC'd adata was then processed through the generic Scanpy pipeline. Briefly, cell
 ## Train/Test splits
 Data was subsetted further to only include features that are "Highly Variable". Data was then split into train/test datasets using stratified 5fold splitting using sklearn's "StratifiedKFold" and splits were saved into data/splits.
 
+## Evaluation Metrics
+Macro F1 score, balanced_accuracy_score, per-class precision, recall, F1, AUROC
+
+
+# Results
+## Substantial class imbalance
 
 
 
