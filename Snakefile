@@ -50,7 +50,7 @@ rule qc_data:
             --species {params.species}
         """
 
-rule normalize_data:
+rule scanpy_pipeline:
     input:
         adata_qc = f"{out_dir}/{adata_qc_file}"
     output:
