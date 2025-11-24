@@ -21,7 +21,7 @@ def main(adata_qc_path: str, adata_norm_path: str):
 
     labels = adata.obs["Cluster"].str.lower()
 
-    adata.obs["vascular subtype"] = (
+    adata.obs["vascular_subtype"] = (
         np.select(
             [
                 labels.str.contains("large") & labels.str.contains("artery"),
@@ -84,7 +84,7 @@ def main(adata_qc_path: str, adata_norm_path: str):
     # QC Plot 2: Scatter of ngenes by count & total counts, colored by outlier
     sc.pl.umap(
         adata,
-        color=["tissue", "vascular_subtype", "leiden", "log1p_total_counts", "pct_counts_mt", "log1p_n_genes_by_counts"],
+        color=["Tissue", "vascular_subtype", "leiden", "log1p_total_counts", "pct_counts_mt", "log1p_n_genes_by_counts"],
         wspace=0.5,
         ncols=2,
         save = "umap1_metrics"
