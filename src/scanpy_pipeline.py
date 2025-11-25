@@ -21,32 +21,56 @@ def main(adata_qc_path: str, adata_norm_path: str):
 
     labels = adata.obs["Cluster"].str.lower()
 
-    adata.obs["vascular_subtype"] = (
+    adata.obs["vascular_class"] = (
+        np.select(
+            [
+                labels.str.contains("artery") | labels.str.contains("arterial") | labels.str.contains("arteriole"),
+                labels.str.contains("vein") | labels.str.contains("venous") | labels.str.contains("venule"),
+                labels.str.contains("proliferating"),
+                labels.str.contains("capillary") & ~labels.str.contains("arterial") & ~labels.str.contains("arteriole") & ~labels.str.contains("venous") & ~labels.str.contains("venule"),
+                labels.str.contains("lymphatic") | labels.str.contains("lypmhatic"),
+                labels.str.contains("angiogenic"),
+                labels.str.contains("choroidplexus") | labels.str.contains("choroid plexus") | labels.str.contains("glomeruli") | labels.str.contains("colon_...7", regex=True),
+                labels.str.contains("interferon"),
+            ],
+            [
+                "Arterial",
+                "Venous",
+                "Proliferating",
+                "Capillary",
+                "Lymphatic",
+                "Angiogenic",
+                "Capillary",
+                "Immunogenic",
+            ],
+            default="Unassigned",
+        )
+    )
+
+    adata.obs["vascular_subclass"] = (
         np.select(
             [
                 labels.str.contains("large") & labels.str.contains("artery"),
                 labels.str.contains("artery") & ~labels.str.contains("large"),
-                labels.str.contains("arterial") | labels.str.contains("arteriole"),
+                labels.str.contains("arterial"),
+                labels.str.contains("arteriole"),
                 labels.str.contains("vein"),
-                labels.str.contains("venous") | labels.str.contains("venule"),
+                labels.str.contains("venous"),
+                labels.str.contains("venule"),
                 labels.str.contains("proliferating"),
-                labels.str.contains("capillary")
-                & ~labels.str.contains("arterial")
-                & ~labels.str.contains("venous")
-                & ~labels.str.contains("arteriole")
-                & ~labels.str.contains("venule"),
+                labels.str.contains("capillary") & ~labels.str.contains("arterial") & ~labels.str.contains("arteriole") & ~labels.str.contains("venous") & ~labels.str.contains("venule"),
                 labels.str.contains("lymphatic") | labels.str.contains("lypmhatic"),
                 labels.str.contains("angiogenic"),
-                labels.str.contains("choroidplexus")
-                | labels.str.contains("glomeruli")
-                | labels.str.contains("colon_...7", regex=True),
+                labels.str.contains("choroidplexus") | labels.str.contains("choroid plexus") | labels.str.contains("glomeruli") | labels.str.contains("colon_...7", regex=True),
                 labels.str.contains("interferon"),
             ],
             [
                 "Large Artery",
                 "Artery",
+                "Arterial"
                 "Arteriole",
                 "Vein",
+                "Venous"
                 "Venule",
                 "Proliferating",
                 "Capillary",
