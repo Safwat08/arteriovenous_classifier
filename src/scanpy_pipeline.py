@@ -17,7 +17,7 @@ def main(adata_qc_path: str, adata_norm_path: str):
     # Read data
     adata = sc.read_h5ad(adata_qc_path)
 
-    adata = adata[adata.obs["Endothelial cell"] == "Yes"].copy()
+    adata = adata[adata.obs["Endothelial cell"] == "Yes"]
 
     labels = adata.obs["Cluster"].str.lower()
 
