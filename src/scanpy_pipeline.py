@@ -15,7 +15,7 @@ def main(adata_qc_path: str, adata_norm_path: str):
     print("loading adata_qc from", adata_qc_path)
     
     # Read data
-    adata = sc.read_h5ad(adata_qc_path)\
+    adata = sc.read_h5ad(adata_qc_path)
 
     adata = adata[adata.obs["Endothelial cell"] == "Yes"].copy()
 
@@ -67,10 +67,10 @@ def main(adata_qc_path: str, adata_norm_path: str):
             [
                 "Large Artery",
                 "Artery",
-                "Arterial"
+                "Arterial",
                 "Arteriole",
                 "Vein",
-                "Venous"
+                "Venous",
                 "Venule",
                 "Proliferating",
                 "Capillary",
@@ -108,7 +108,7 @@ def main(adata_qc_path: str, adata_norm_path: str):
     # QC Plot 2: Scatter of ngenes by count & total counts, colored by outlier
     sc.pl.umap(
         adata,
-        color=["Tissue", "vascular_subtype", "leiden", "log1p_total_counts", "pct_counts_mt", "log1p_n_genes_by_counts"],
+        color=["Tissue", "vascular_class", "vascular_subclass", "leiden", "log1p_total_counts", "pct_counts_mt", "log1p_n_genes_by_counts"],
         wspace=0.5,
         ncols=2,
         save = "umap1_metrics"
